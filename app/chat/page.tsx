@@ -24,49 +24,55 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const chatHistory = useRef<{ role: string; content: string }[]>([])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, pendingImages, isTyping])
 
-  function sendText() {
+  async function sendText() {
     const text = input.trim()
     if (!text) return
     setInput('')
     setMessages(m => [...m, { from: 'user', text, time: now() }])
-    simulateReply()
+    chatHistory.current.push({ role: 'user', content: text })
+    await getAIReply()
   }
 
-  function simulateReply() {
-    setIsTyping(true)
-    setTimeout(() => {
-      setIsTyping(false)
-      setMessages(m => [...m, {
-        from: 'bot',
-        text: "Love your style! That outfit looks great — want me to suggest some matching accessories?",
-        time: now(),
-      }])
-    }, 1500)
-  }
+        async function getAIReply() {
+        setIsTyping(true)
+        try {
+            const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: chatHistory.current })
+            })
+            const data = await res.json()
+            setIsTyping(false)
+            setMessages(m => [...m, { from: 'bot', text: data.text, time: now() }])
+            chatHistory.current.push({ role: 'assistant', content: data.text })
+        } catch {
+            setIsTyping(false)
+            setMessages(m => [...m, { from: 'bot', text: "Sorry, something went wrong. Please try again.", time: now() }])
+        }
+        }
+        function handleFiles(files: FileList | null) {
+            if (!files) return
+            const urls = Array.from(files).map(f => URL.createObjectURL(f))
+            setPendingImages(urls)
+            setShowAttach(false)
+        }
 
-  function handleFiles(files: FileList | null) {
-    if (!files) return
-    const urls = Array.from(files).map(f => URL.createObjectURL(f))
-    setPendingImages(urls)
-    setShowAttach(false)
-  }
-
-  function sendFiles() {
-    if (!pendingImages.length) return
-    setMessages(m => [...m, { from: 'files', images: pendingImages, time: now() }])
-    setPendingImages([])
-    simulateReply()
-  }
+        function sendFiles() {
+            if (!pendingImages.length) return
+            setMessages(m => [...m, { from: 'files', images: pendingImages, time: now() }])
+            setPendingImages([])
+            chatHistory.current.push({ role: 'user', content: 'I uploaded an outfit photo for styling advice.' })
+            getAIReply()
+        }
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-120px)]">
-
-      {/* Page title */}
       <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
         <h1 className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair)" }}>Chat with Stylist</h1>
         <span className="flex items-center gap-1 text-xs text-green-500 font-medium">
@@ -74,23 +80,19 @@ export default function ChatPage() {
         </span>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.map((msg, i) => {
           if (msg.from === 'bot') {
             const prevBot = i > 0 && messages[i - 1].from === 'bot'
             return (
               <div key={i} className="flex flex-col items-start">
-                {!prevBot && (
-                  <span className="text-xs text-gray-400 mb-1.5 ml-1">{msg.time}</span>
-                )}
+                {!prevBot && <span className="text-xs text-gray-400 mb-1.5 ml-1">{msg.time}</span>}
                 <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-sm text-gray-700">
                   {msg.text}
                 </div>
               </div>
             )
           }
-
           if (msg.from === 'user') {
             return (
               <div key={i} className="flex flex-col items-end">
@@ -101,15 +103,13 @@ export default function ChatPage() {
               </div>
             )
           }
-
           if (msg.from === 'files') {
             return (
               <div key={i} className="flex flex-col items-end gap-2">
                 <span className="text-xs text-gray-400 mr-1">{msg.time}</span>
                 <div className="flex gap-2">
                   {msg.images.map((src, j) => (
-                    <img key={j} src={src} alt="upload"
-                      className="w-28 h-28 object-cover rounded-xl shadow-sm" />
+                    <img key={j} src={src} alt="upload" className="w-28 h-28 object-cover rounded-xl shadow-sm" />
                   ))}
                 </div>
               </div>
@@ -136,9 +136,6 @@ export default function ChatPage() {
                 </svg>
               </span>
               <span className="text-sm text-gray-600 flex-1">1 of 1 uploaded</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-              </svg>
             </div>
             <div className="flex gap-2 mb-3">
               {pendingImages.map((src, i) => (
@@ -155,7 +152,6 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Attach menu */}
       {showAttach && (
         <div className="bg-white border border-gray-100 shadow-lg rounded-t-2xl overflow-hidden mx-6">
           <button onClick={() => fileRef.current?.click()}
@@ -175,7 +171,6 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Input bar */}
       <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-3">
         <input
           value={input}
@@ -183,11 +178,6 @@ export default function ChatPage() {
           onKeyDown={e => e.key === 'Enter' && sendText()}
           placeholder="Write a message..."
           className="flex-1 text-sm text-gray-600 outline-none placeholder-gray-300 bg-transparent" />
-        <button className="text-gray-300 hover:text-gray-500 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </button>
         <button onClick={() => setShowAttach(v => !v)} className="text-gray-300 hover:text-gray-500 transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
