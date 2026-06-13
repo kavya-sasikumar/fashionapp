@@ -164,7 +164,7 @@ export default function EventsPage() {
   const [styleGender, setStyleGender] = useState<'women' | 'men'>('women')
 
   const eventLabel = events.find(e => e.id === selectedEvent)?.label ?? ''
-  const currentStyleImages = (selectedEvent && styleImages[selectedEvent]?.[styleGender]) ?? []
+  const currentStyleImages: {id:number, src:string}[] = selectedEvent ? (styleImages[selectedEvent]?.[styleGender] ?? []) : []
 
   function toggleStyle(id: number) {
     setSelectedStyles(prev =>
@@ -180,9 +180,11 @@ export default function EventsPage() {
 
         <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
           {selectedStyles.map(id => {
-            const img = styleImages.find(s => s.id === id)!
+            const allImages = Object.values(styleImages).flatMap(s => [...s.women, ...s.men])
+            const img = allImages.find(s => s.id === id)
+            if (!img) return null
             return (
-              <img key={id} src={img.src} alt={img.alt}
+              <img key={id} src={img.src} alt="selected style"
                 className="w-28 h-28 object-cover rounded-2xl flex-shrink-0 shadow-sm" />
             )
           })}
@@ -240,7 +242,7 @@ export default function EventsPage() {
             return (
               <button key={img.id} onClick={() => toggleStyle(img.id)}
                 className={`relative rounded-2xl overflow-hidden aspect-[3/4] border-2 transition-all ${picked ? 'border-[#6B2737]' : 'border-transparent'}`}>
-                <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                <img src={img.src} alt="style option" className="w-full h-full object-cover" />
                 {picked && (
                   <div className="absolute inset-0 bg-[#6B2737]/20 flex items-end justify-end p-2">
                     <span className="bg-[#6B2737] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
