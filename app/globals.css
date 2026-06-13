@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Warm color palette — replaces cold Tailwind grays */
+  --color-gray-50:  #faf8f8;
+  --color-gray-100: #f2eeee;
+  --color-gray-200: #e4dcdc;
+  --color-gray-300: #c9bebe;
+  --color-gray-400: #a08888;
+  --color-gray-500: #7a6060;
+  --color-gray-600: #5c4848;
+  --color-gray-700: #3d2f2f;
+  --color-gray-800: #2a1f1f;
+  --color-gray-900: #1a1212;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  color-scheme: light;
+  background: #ffffff;
+  color: #1a1212;
+  font-family: var(--font-poppins), sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Smooth hover lift for clickable cards */
+a, button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+a:hover, button:hover {
+  transform: translateY(-1px);
+}
+
+a:active, button:active {
+  transform: translateY(0px);
+}
+
+/* Smooth focus rings */
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(107, 39, 55, 0.15);
 }
