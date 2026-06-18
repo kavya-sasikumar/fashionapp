@@ -1,16 +1,30 @@
-import { openai } from '@ai-sdk/openai'
-import { streamText } from 'ai'
+import OpenAI from 'openai'
+import { NextResponse } from 'next/server'
 
-export const maxDuration = 30
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
 
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  try {
+    const { messages } = await req.json()
 
-  const result = streamText({
-    model: openai('gpt-4o'),
-    system: 'You are a warm, knowledgeable personal fashion stylist. Help users find outfits, understand sizing, and discover their personal style. Be specific, encouraging, and friendly. Keep responses concise.',
-    messages
-  })
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a warm, knowledgeable personal fashion stylist. Help users find outfits, understand sizing, and discover their personal style. Be specific, encouraging, and friendly. Keep responses concise.'
+        },
+        ...messages
+      ]
+    })
 
-  return result.toTextStreamResponse()
+    const text = response.choices[0].message.content
+    return NextResponse.json({ text })
+
+  } catch (error) {
+    console.error('OpenAI error:', error)
+    return NextResponse.json({ error: 'Failed to get response' }, { status: 500 })
+  }
 }
