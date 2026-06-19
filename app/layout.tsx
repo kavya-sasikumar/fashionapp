@@ -49,6 +49,8 @@ export default function RootLayout({
 
           <footer className="bg-white border-t border-gray-100 px-8 py-6 text-center text-sm text-gray-400">
             &copy; {new Date().getFullYear()} FashionApp &mdash; Powered by AI
+            <span className="mx-2">&middot;</span>
+            <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
           </footer>
         </body>
       </html>
