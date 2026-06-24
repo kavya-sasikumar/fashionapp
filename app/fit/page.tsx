@@ -7,6 +7,7 @@ const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Su
 const womenSizes    = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const menSizes      = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
 const brandList     = ['Zara', 'H&M', 'ASOS', 'Uniqlo', "Levi's", 'Nike', 'Adidas', 'Gap', 'Banana Republic', 'Mango']
+const fitList       = ['Baggy / Boxy', 'Skinny', 'Slim', 'Cropped']
 
 const sizeConversionUp: Record<string, string> = { XS: 'S', S: 'M', M: 'L', L: 'XL', XL: 'XXL', XXL: 'XXL', '2XL': '3XL', '3XL': '3XL' }
 const sizeConversionDown: Record<string, string> = { XS: 'XS', S: 'XS', M: 'S', L: 'M', XL: 'L', XXL: 'XL', '2XL': 'XL', '3XL': '2XL' }
@@ -31,12 +32,13 @@ export default function FitPage() {
   const [targetBrand, setTargetBrand] = useState('')
   const [product, setProduct]   = useState('')
   const [size, setSize]         = useState('')
+  const [fit, setFit]           = useState('')
   const [result, setResult]     = useState<{ size: string; brand: string } | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
 
   const sizes = gender === 'women' ? womenSizes : menSizes
   const products = gender === 'women' ? womenProducts : menProducts
-  const ready = knownBrand && targetBrand && product && size && knownBrand !== targetBrand
+  const ready = knownBrand && targetBrand && product && size && knownBrand && fit !== targetBrand
 
   function switchGender(g: 'women' | 'men') {
     setGender(g)
@@ -48,7 +50,7 @@ export default function FitPage() {
   function findSize() {
     if (!ready) return
     const converted = convertSize(knownBrand, targetBrand, size)
-    setResult({ size: converted, brand: targetBrand })
+    setResult({ size: converted, brand: targetBrand, fit})
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
   }
 
@@ -148,6 +150,24 @@ export default function FitPage() {
           </div>
         </div>
 
+        {/* Step 5 - Product */}
+        <div className="flex gap-5 items-start">
+          <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>5</span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900 mb-3">What is the fit you are looking for?</p>
+            <div className="flex flex-wrap gap-2">
+              {fitList.map(f => (
+                <button key={f} onClick={() => setFit(f)}
+                  className={`px-4 py-2 rounded-full text-sm border-2 transition-colors ${
+                    fit === f ? 'bg-[#6B2737] text-white border-[#6B2737] font-medium' : 'text-gray-500 border-gray-200 hover:border-[#6B2737]'
+                  }`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <button
           onClick={findSize}
           disabled={!ready}
@@ -159,7 +179,7 @@ export default function FitPage() {
           <div ref={resultRef} className="bg-[#6B2737] rounded-3xl p-6 text-white">
             <p className="text-xs font-semibold tracking-widest uppercase text-rose-300 mb-3">Your Size in {result.brand}</p>
             <p className="text-5xl font-bold mb-1" style={{ fontFamily: "var(--font-playfair)" }}>{result.size}</p>
-            <p className="text-rose-200 text-sm mt-2">Based on your {knownBrand} size {size} in {product}</p>
+            <p className="text-rose-200 text-sm mt-2">Based on your {knownBrand} size {size} in {product} for {fit}</p>
           </div>
         )}
 
