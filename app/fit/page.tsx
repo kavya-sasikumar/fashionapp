@@ -33,7 +33,7 @@ export default function FitPage() {
   const [product, setProduct]   = useState('')
   const [size, setSize]         = useState('')
   const [fit, setFit]           = useState('')
-  const [result, setResult]     = useState<{ size: string; brand: string } | null>(null)
+  const [result, setResult]     = useState<{ size: string; brand: string; fit: string } | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
 
   const sizes = gender === 'women' ? womenSizes : menSizes
