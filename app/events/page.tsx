@@ -14,6 +14,19 @@ const events = [
   { id: 'family',    label: 'Family Dinners & Gatherings', sub: 'Warm, elegant & effortlessly put-together',  img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80' },
   { id: 'gym',       label: 'Gym & Activewear',            sub: 'Outfits that move with you',                 img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80' },
 ]
+/*
+const [currentStyleImages, setCurrentStyleImages] = useState<{id:string, src:string}[]>([])
+
+async function loadPinterestImages(eventLabel: string, gender: string) {
+  const res = await fetch(`/api/pinterest?query=${eventLabel} ${gender} outfit`)
+  const data = await res.json()
+  const images = data.items?.map((pin: any) => ({
+    id: pin.id,
+    src: pin.media?.images?.['400x300']?.url
+  })) ?? []
+  setCurrentStyleImages(images)
+}
+*/
 
 const styleImages: Record<string, { women: {id:number,src:string}[], men: {id:number,src:string}[] }> = {
   daily: {
@@ -143,6 +156,8 @@ const styleImages: Record<string, { women: {id:number,src:string}[], men: {id:nu
     ],
   },
 }
+
+
 
 const products = [
   { id: 1, brand: 'Blush & Threads', name: 'Purple Floral Dress',  price: '$89',  src: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=100&q=80' },

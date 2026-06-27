@@ -12,7 +12,7 @@ const fitList       = ['Boxy', 'Skinny', 'Slim', 'Cropped']
 const sizeConversionUp: Record<string, string> = { XS: 'S', S: 'M', M: 'L', L: 'XL', XL: 'XXL', XXL: 'XXL', '2XL': '3XL', '3XL': '3XL' }
 const sizeConversionDown: Record<string, string> = { XS: 'XS', S: 'XS', M: 'S', L: 'M', XL: 'L', XXL: 'XL', '2XL': 'XL', '3XL': '2XL' }
 
-const brandSizeTendency: Record<string, 'same' | 'up' | 'down'> = {
+const brandSizeTendency: Record<string, 'same' | 'up' | 'down'> = { 
   'Zara': 'up', 'H&M': 'same', 'ASOS': 'same', 'Uniqlo': 'up',
   "Levi's": 'down', 'Nike': 'same', 'Adidas': 'same',
   'Gap': 'down', 'Banana Republic': 'same', 'Mango': 'up',
