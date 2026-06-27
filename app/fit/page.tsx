@@ -6,7 +6,7 @@ const womenProducts = ['Dresses & Gowns', 'Tops & Blouses', 'Skirts', 'Jeans & T
 const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
 const womenSizes    = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const menSizes      = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
-const brandList     = ['Zara', 'H&M', 'ASOS', 'Uniqlo', "Levi's", 'Nike', 'Adidas', 'Gap', 'Banana Republic', 'Mango']
+const brandList     = ['Zara', 'H&M', 'Uniqlo', 'Nike', 'Hollister Co.']
 const fitList       = ['Baggy / Boxy', 'Skinny', 'Slim', 'Cropped']
 
 const sizeConversionUp: Record<string, string> = { XS: 'S', S: 'M', M: 'L', L: 'XL', XL: 'XXL', XXL: 'XXL', '2XL': '3XL', '3XL': '3XL' }
