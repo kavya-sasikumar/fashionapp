@@ -38,20 +38,50 @@ export default function FitPage() {
 
   const sizes = gender === 'women' ? womenSizes : menSizes
   const products = gender === 'women' ? womenProducts : menProducts
-  const ready = knownBrand && targetBrand && product && size && knownBrand && fit !== targetBrand
+
+  const [waist, setWaist] = useState('')
+  const [inseam, setInseam] = useState('')
+  const isJeans = product === 'Jeans & Trousers'
+
+  const ready = knownBrand && targetBrand && product && fit !== targetBrand &&
+    (isJeans ? (waist && inseam) : size)
+
+  const jeanWaists  = ['26', '28', '30', '32', '34', '36', '38', '40']
+  const jeanInseams = ['28', '30', '32', '34']
+
+  // how many inches a brand tends to run small/large in the waist
+  const brandJeanOffset: Record<string, number> = {
+    'Zara': -1, 'H&M': 0, 'Uniqlo': -1, 'Nike': 0, 'Hollister Co.': -2,
+  }
+
+  function findSize() {
+    if (!ready) return
+    if (isJeans) {
+      const convertedWaist = convertJeanWaist(knownBrand, targetBrand, waist)
+      setResult({ size: `${convertedWaist} x ${inseam}`, brand: targetBrand, fit })
+    } else {
+      const converted = convertSize(knownBrand, targetBrand, size)
+      setResult({ size: converted, brand: targetBrand, fit })
+    }
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+  }
+
+  function convertJeanWaist(fromBrand: string, toBrand: string, waist: string) {
+    const from = brandJeanOffset[fromBrand] ?? 0
+    const to   = brandJeanOffset[toBrand] ?? 0
+    const diff = to - from
+    const num = parseInt(waist, 10) + diff
+    // snap to nearest available even waist size
+    return jeanWaists.reduce((closest, w) =>
+      Math.abs(parseInt(w) - num) < Math.abs(parseInt(closest) - num) ? w : closest
+    , jeanWaists[0])
+  }
 
   function switchGender(g: 'women' | 'men') {
     setGender(g)
     setProduct('')
     setSize('')
     setResult(null)
-  }
-
-  function findSize() {
-    if (!ready) return
-    const converted = convertSize(knownBrand, targetBrand, size)
-    setResult({ size: converted, brand: targetBrand, fit})
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
   }
 
   return (
