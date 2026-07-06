@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 
 const womenProducts = ['Dresses & Gowns', 'Tops & Blouses', 'Skirts', 'Jeans & Trousers', 'Jackets & Coats', 'Activewear & Leggings', 'Swimwear', 'Lingerie & Loungewear']
-const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
+const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
 const womenSizes    = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const menSizes      = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
 const brandList     = ['Zara', 'H&M', 'Uniqlo', 'Nike', 'Hollister Co.']
@@ -65,9 +65,9 @@ export default function FitPage() {
 
   const [waist, setWaist] = useState('')
   const [inseam, setInseam] = useState('')
-  const isJeans = product === 'Jeans & Trousers'
+  const isJeans = product === 'Jeans & Trousers' || product === 'Jeans & Chinos'
 
-  const ready = knownBrand && targetBrand && product && fit !== targetBrand &&
+  const ready = knownBrand && targetBrand && product && 
     (isJeans ? (waist && inseam) : size)
 
   const jeanWaists  = ['26', '28', '30', '32', '34', '36', '38', '40']
@@ -228,9 +228,27 @@ export default function FitPage() {
           </div>
         </div>
 
-        {/* Step 2 - Known brand + size */}
+        {/* Step 2 - Product */}
         <div className="flex gap-5 items-start">
           <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>2</span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900 mb-3">What are you shopping for?</p>
+            <div className="flex flex-wrap gap-2">
+              {products.map(p => (
+                <button key={p} onClick={() => setProduct(p)}
+                  className={`px-4 py-2 rounded-full text-sm border-2 transition-colors ${
+                    product === p ? 'bg-[#6B2737] text-white border-[#6B2737] font-medium' : 'text-gray-500 border-gray-200 hover:border-[#6B2737]'
+                  }`}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Step 3 - Known brand + size */}
+        <div className="flex gap-5 items-start">
+          <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>3</span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900 mb-1">My size in...</p>
             <p className="text-xs text-gray-400 mb-3">Pick a brand you already know your size in</p>
@@ -245,23 +263,50 @@ export default function FitPage() {
               ))}
             </div>
             {knownBrand && (
-              <div className="flex flex-wrap gap-2">
-                {sizes.map(s => (
-                  <button key={s} onClick={() => setSize(s)}
-                    className={`w-14 h-14 rounded-2xl text-sm font-bold border-2 transition-colors ${
-                      size === s ? 'bg-[#6B2737] text-white border-[#6B2737]' : 'text-gray-600 border-gray-200 hover:border-[#6B2737]'
-                    }`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
+              isJeans ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-400">Waist</p>
+                  <div className="flex flex-wrap gap-2">
+                    {jeanWaists.map(w => (
+                      <button key={w} onClick={() => setWaist(w)}
+                        className={`w-14 h-14 rounded-2xl text-sm font-bold border-2 transition-colors ${
+                          waist === w ? 'bg-[#6B2737] text-white border-[#6B2737]' : 'text-gray-600 border-gray-200 hover:border-[#6B2737]'
+                        }`}>
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400">Inseam</p>
+                  <div className="flex flex-wrap gap-2">
+                    {jeanInseams.map(i => (
+                      <button key={i} onClick={() => setInseam(i)}
+                        className={`w-14 h-14 rounded-2xl text-sm font-bold border-2 transition-colors ${
+                          inseam === i ? 'bg-[#6B2737] text-white border-[#6B2737]' : 'text-gray-600 border-gray-200 hover:border-[#6B2737]'
+                        }`}>
+                        {i}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map(s => (
+                    <button key={s} onClick={() => setSize(s)}
+                      className={`w-14 h-14 rounded-2xl text-sm font-bold border-2 transition-colors ${
+                        size === s ? 'bg-[#6B2737] text-white border-[#6B2737]' : 'text-gray-600 border-gray-200 hover:border-[#6B2737]'
+                      }`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )
             )}
           </div>
         </div>
 
-        {/* Step 3 - Target brand */}
+        {/* Step 4 - Target brand */}
         <div className="flex gap-5 items-start">
-          <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>3</span>
+          <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>4</span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900 mb-1">I want to shop at...</p>
             <p className="text-xs text-gray-400 mb-3">Pick the brand you want to buy from</p>
@@ -272,24 +317,6 @@ export default function FitPage() {
                     targetBrand === b ? 'bg-[#6B2737] text-white border-[#6B2737] font-medium' : 'text-gray-500 border-gray-200 hover:border-[#6B2737]'
                   }`}>
                   {b}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Step 4 - Product */}
-        <div className="flex gap-5 items-start">
-          <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>4</span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900 mb-3">What are you shopping for?</p>
-            <div className="flex flex-wrap gap-2">
-              {products.map(p => (
-                <button key={p} onClick={() => setProduct(p)}
-                  className={`px-4 py-2 rounded-full text-sm border-2 transition-colors ${
-                    product === p ? 'bg-[#6B2737] text-white border-[#6B2737] font-medium' : 'text-gray-500 border-gray-200 hover:border-[#6B2737]'
-                  }`}>
-                  {p}
                 </button>
               ))}
             </div>
