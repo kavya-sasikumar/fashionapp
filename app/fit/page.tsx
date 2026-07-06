@@ -67,7 +67,7 @@ export default function FitPage() {
   const [inseam, setInseam] = useState('')
   const isJeans = product === 'Jeans & Trousers' || product === 'Jeans & Chinos'
 
-  const ready = knownBrand && targetBrand && product && 
+  const ready = knownBrand && targetBrand && product && (targetBrand !== knownBrand) &&
     (isJeans ? (waist && inseam) : size)
 
   const jeanWaists  = ['26', '28', '30', '32', '34', '36', '38', '40']
