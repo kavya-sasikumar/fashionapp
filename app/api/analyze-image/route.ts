@@ -4,7 +4,6 @@ export async function POST(request: any) {
   try {
     const formData = await request.formData()
     const file = formData.get('image') as File
-
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
