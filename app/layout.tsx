@@ -38,6 +38,7 @@ export default function RootLayout({
               <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
               <Link href="/events" className="hover:text-gray-900 transition-colors">Events</Link>
               <Link href="/fit" className="hover:text-gray-900 transition-colors">Find My Fit</Link>
+              <Link href="/wardrobe" className="hover:text-gray-900 transition-colors">My Wardrobe</Link>
               <Link href="/chat" className="hover:text-gray-900 transition-colors">Stylist Chat</Link>
               <Link href="/sign-in" className="hover:text-gray-900 transition-colors">Sign in</Link>
               <Link href="/signup" className="bg-[#6B2737] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[#8B3A4A] transition-colors">Sign up</Link>
