@@ -68,8 +68,32 @@ Provide realistic clothing size estimates. Reference sizes:
 
     const measurements = JSON.parse(jsonMatch[0])
     return NextResponse.json(measurements)
+    } catch (error) {
+      console.error('Image analysis error:', error)
+      if (i === retries - 1) {
+        return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 })
+      }
+    }
+  }
+  return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 })
+}
+
+export async function POST(request: any) {
+  try {
+    const formData = await request.formData()
+    const file = formData.get('image') as File
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    const buffer = await file.arrayBuffer()
+    const base64 = Buffer.from(buffer).toString('base64')
+    const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+
+    return await callAnthropicAPI(base64, mediaType)
   } catch (error) {
-    console.error('Image analysis error:', error)
-    return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 })
+    console.error('Error:', error)
+    return NextResponse.json({ error: 'Failed to process image' }, { status: 500 })
   }
 }
