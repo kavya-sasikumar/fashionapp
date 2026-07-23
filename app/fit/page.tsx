@@ -76,17 +76,6 @@ export default function FitPage() {
     'Zara': -1, 'H&M': 0, 'Uniqlo': -1, 'Nike': 0, 'Hollister Co.': -2,
   }
 
-  useEffect(() => {
-    const loadML = async () => {
-      if (typeof window !== 'undefined' && !window.mediaDevices) {
-        const script = document.createElement('script')
-        script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4'
-        script.async = true
-        document.head.appendChild(script)
-      }
-    }
-    loadML()
-  }, [])
 
   async function analyzeImagePose(file: File) {
     setIsAnalyzing(true)
