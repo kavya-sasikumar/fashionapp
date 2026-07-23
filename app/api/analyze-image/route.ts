@@ -47,8 +47,11 @@ export async function POST(request: any) {
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('API error:', error)
-      return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 })
+      console.error('Anthropic API error:', error)
+      return NextResponse.json({
+        error: 'Failed to analyze image',
+        details: JSON.stringify(error)
+      }, { status: 500 })
     }
 
     const data = await response.json()
@@ -66,7 +69,11 @@ export async function POST(request: any) {
     const measurements = JSON.parse(jsonMatch[0])
     return NextResponse.json(measurements)
   } catch (error) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: 'Failed to process image' }, { status: 500 })
+    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+    console.error('Analyze image error:', errorMsg)
+    return NextResponse.json({
+      error: 'Failed to process image',
+      details: errorMsg
+    }, { status: 500 })
   }
 }
