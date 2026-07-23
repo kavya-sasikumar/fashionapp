@@ -12,26 +12,23 @@ export async function POST(request: any) {
     const base64 = Buffer.from(buffer).toString('base64')
     const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 1024,
+        model: 'gpt-4-vision',
+        max_tokens: 200,
         messages: [
           {
             role: 'user',
             content: [
               {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mediaType,
-                  data: base64,
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mediaType};base64,${base64}`,
                 },
               },
               {
@@ -121,6 +118,7 @@ export async function POST(request: any) {
     if (!response.ok) {
       const error = await response.json()
       console.error('Anthropic API error:', error)
+      console.error('OpenAI API error:', error)
       return NextResponse.json({
         error: 'Failed to analyze image',
         details: JSON.stringify(error)
@@ -128,13 +126,13 @@ export async function POST(request: any) {
     }
 
     const data = await response.json()
-    const content = data.content[0]
+    const content = data.choices[0]?.message?.content
 
-    if (content.type !== 'text') {
-      return NextResponse.json({ error: 'Unexpected response type' }, { status: 500 })
+    if (!content) {
+      return NextResponse.json({ error: 'Unexpected response format' }, { status: 500 })
     }
 
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/)
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Could not parse measurements' }, { status: 500 })
     }
