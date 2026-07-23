@@ -113,8 +113,8 @@ export default function FitPage() {
       ctx.drawImage(img, 0, 0)
 
       const detector = await (window as any).poseDetection.createDetector(
-        (window as any).poseDetection.SupportedModels.Movenet,
-        { modelType: (window as any).poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+        'movenet',
+        { modelType: 'singlepose_thunder' }
       )
 
       const poses = await detector.estimatePoses(img)
