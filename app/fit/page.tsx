@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 
 const womenProducts = ['Dresses & Gowns', 'Tops & Blouses', 'Skirts', 'Jeans & Trousers', 'Jackets & Coats', 'Activewear & Leggings', 'Swimwear', 'Lingerie & Loungewear']
 const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
@@ -16,6 +17,25 @@ const brandSizeTendency: Record<string, 'same' | 'up' | 'down'> = {
   'Zara': 'up', 'H&M': 'same', 'ASOS': 'same', 'Uniqlo': 'up',
   "Levi's": 'down', 'Nike': 'same', 'Adidas': 'same',
   'Gap': 'down', 'Banana Republic': 'same', 'Mango': 'up',
+}
+
+function estimateSizeFromMeasurements(bust: number, _waist: number, _hips: number, gender: 'women' | 'men') {
+  if (gender === 'women') {
+    if (bust < 34) return 'XS'
+    if (bust < 36) return 'S'
+    if (bust < 39) return 'M'
+    if (bust < 41.5) return 'L'
+    if (bust < 43.5) return 'XL'
+    return 'XXL'
+  } else {
+    if (bust < 36) return 'XS'
+    if (bust < 37.5) return 'S'
+    if (bust < 40) return 'M'
+    if (bust < 42.5) return 'L'
+    if (bust < 45) return 'XL'
+    if (bust < 47.5) return 'XXL'
+    return '2XL'
+  }
 }
 
 function convertSize(fromBrand: string, toBrand: string, size: string) {
@@ -34,7 +54,11 @@ export default function FitPage() {
   const [size, setSize]         = useState('')
   const [fit, setFit]           = useState('')
   const [result, setResult]     = useState<{ size: string; brand: string; fit: string } | null>(null)
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sizes = gender === 'women' ? womenSizes : menSizes
   const products = gender === 'women' ? womenProducts : menProducts
@@ -84,6 +108,54 @@ export default function FitPage() {
     setResult(null)
   }
 
+  async function analyzeImage(file: File) {
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze image')
+      }
+
+      const measurements = await response.json()
+      const estimatedSize = estimateSizeFromMeasurements(
+        measurements.bust,
+        measurements.waist,
+        measurements.hips,
+        gender
+      )
+
+      setSize(estimatedSize)
+      setKnownBrand('Photo')
+      setAnalysisError(null)
+    } catch (error) {
+      setAnalysisError('Could not analyze image. Please try another photo or enter your size manually.')
+      console.error('Analysis error:', error)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setUploadedImage(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    analyzeImage(file)
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
 
@@ -93,6 +165,50 @@ export default function FitPage() {
       </div>
 
       <div className="space-y-10">
+
+        {/* Image Upload Section */}
+        <div className="border-2 border-dashed border-gray-200 rounded-3xl p-8 bg-gray-50">
+          <p className="text-sm font-semibold text-gray-900 mb-3">Quick option: Upload a photo</p>
+          <p className="text-xs text-gray-400 mb-4">We'll scan your photo to estimate your size, or manually enter it below.</p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={isAnalyzing}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isAnalyzing}
+            className="px-6 py-2.5 rounded-full text-sm font-medium bg-[#6B2737] text-white border-2 border-[#6B2737] hover:bg-[#8B3A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            {isAnalyzing ? 'Analyzing...' : 'Upload Photo'}
+          </button>
+
+          {uploadedImage && (
+            <div className="mt-4 flex gap-4 items-start">
+              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <Image
+                  src={uploadedImage}
+                  alt="Uploaded"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                {analysisError ? (
+                  <p className="text-xs text-red-500">{analysisError}</p>
+                ) : size ? (
+                  <p className="text-xs text-green-600 font-medium">✓ Estimated size: <span className="font-bold">{size}</span></p>
+                ) : isAnalyzing ? (
+                  <p className="text-xs text-gray-500">Analyzing your photo...</p>
+                ) : null}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Step 1 - Gender */}
         <div className="flex gap-5 items-start">
