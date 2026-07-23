@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server'
+import https from 'https'
+
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+})
 
 export async function POST(request: any) {
   try {
@@ -13,6 +18,7 @@ export async function POST(request: any) {
     const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      agent: httpsAgent as any,
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`,
