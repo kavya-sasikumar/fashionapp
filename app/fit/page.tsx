@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 
 const womenProducts = ['Dresses & Gowns', 'Tops & Blouses', 'Skirts', 'Jeans & Trousers', 'Jackets & Coats', 'Activewear & Leggings', 'Swimwear', 'Lingerie & Loungewear']
 const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
@@ -16,6 +17,25 @@ const brandSizeTendency: Record<string, 'same' | 'up' | 'down'> = {
   'Zara': 'up', 'H&M': 'same', 'ASOS': 'same', 'Uniqlo': 'up',
   "Levi's": 'down', 'Nike': 'same', 'Adidas': 'same',
   'Gap': 'down', 'Banana Republic': 'same', 'Mango': 'up',
+}
+
+function estimateSizeFromMeasurements(bust: number, _waist: number, _hips: number, gender: 'women' | 'men') {
+  if (gender === 'women') {
+    if (bust < 34) return 'XS'
+    if (bust < 36) return 'S'
+    if (bust < 39) return 'M'
+    if (bust < 41.5) return 'L'
+    if (bust < 43.5) return 'XL'
+    return 'XXL'
+  } else {
+    if (bust < 36) return 'XS'
+    if (bust < 37.5) return 'S'
+    if (bust < 40) return 'M'
+    if (bust < 42.5) return 'L'
+    if (bust < 45) return 'XL'
+    if (bust < 47.5) return 'XXL'
+    return '2XL'
+  }
 }
 
 function convertSize(fromBrand: string, toBrand: string, size: string) {
@@ -34,7 +54,11 @@ export default function FitPage() {
   const [size, setSize]         = useState('')
   const [fit, setFit]           = useState('')
   const [result, setResult]     = useState<{ size: string; brand: string; fit: string } | null>(null)
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sizes = gender === 'women' ? womenSizes : menSizes
   const products = gender === 'women' ? womenProducts : menProducts
@@ -49,9 +73,101 @@ export default function FitPage() {
   const jeanWaists  = ['26', '28', '30', '32', '34', '36', '38', '40']
   const jeanInseams = ['28', '30', '32', '34']
 
-  // how many inches a brand tends to run small/large in the waist
   const brandJeanOffset: Record<string, number> = {
     'Zara': -1, 'H&M': 0, 'Uniqlo': -1, 'Nike': 0, 'Hollister Co.': -2,
+  }
+
+  useEffect(() => {
+    const loadPoseDetection = async () => {
+      if (typeof window !== 'undefined') {
+        const script = document.createElement('script')
+        script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4'
+        script.async = true
+        document.head.appendChild(script)
+
+        script.onload = () => {
+          const poseScript = document.createElement('script')
+          poseScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2'
+          poseScript.async = true
+          document.head.appendChild(poseScript)
+        }
+      }
+    }
+    loadPoseDetection()
+  }, [])
+
+  async function analyzeImagePose(file: File) {
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+    try {
+      const img = new Image()
+      img.src = URL.createObjectURL(file)
+
+      await new Promise(resolve => {
+        img.onload = resolve
+      })
+
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+
+      const detector = await (window as any).poseDetection.createDetector(
+        (window as any).poseDetection.SupportedModels.Movenet,
+        { modelType: (window as any).poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+      )
+
+      const poses = await detector.estimatePoses(img)
+      if (!poses || poses.length === 0) {
+        throw new Error('Could not detect body in image. Please try another photo.')
+      }
+
+      const keypoints = poses[0].keypoints
+      const shoulderLeft = keypoints.find(k => k.name === 'left_shoulder')
+      const shoulderRight = keypoints.find(k => k.name === 'right_shoulder')
+      const hipLeft = keypoints.find(k => k.name === 'left_hip')
+      const hipRight = keypoints.find(k => k.name === 'right_hip')
+
+      if (!shoulderLeft || !shoulderRight || !hipLeft || !hipRight) {
+        throw new Error('Could not detect body measurements. Please try another photo.')
+      }
+
+      const shoulderDistance = Math.hypot(
+        shoulderRight.x - shoulderLeft.x,
+        shoulderRight.y - shoulderLeft.y
+      )
+      const hipDistance = Math.hypot(
+        hipRight.x - hipLeft.x,
+        hipRight.y - hipLeft.y
+      )
+
+      const bust = 32 + (shoulderDistance / img.width) * 20
+      const waistEst = 28 + (hipDistance / img.width) * 16
+      const hips = 36 + (hipDistance / img.width) * 22
+
+      const estimatedSize = estimateSizeFromMeasurements(bust, waistEst, hips, gender)
+      setSize(estimatedSize)
+      setKnownBrand('Photo')
+      setAnalysisError(null)
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : 'Could not analyze image. Please try another photo or enter your size manually.')
+      console.error('Analysis error:', error)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setUploadedImage(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+    analyzeImagePose(file)
   }
 
   function findSize() {
@@ -71,7 +187,6 @@ export default function FitPage() {
     const to   = brandJeanOffset[toBrand] ?? 0
     const diff = to - from
     const num = parseInt(waist, 10) + diff
-    // snap to nearest available even waist size
     return jeanWaists.reduce((closest, w) =>
       Math.abs(parseInt(w) - num) < Math.abs(parseInt(closest) - num) ? w : closest
     , jeanWaists[0])
@@ -93,6 +208,50 @@ export default function FitPage() {
       </div>
 
       <div className="space-y-10">
+
+        {/* Image Upload Section */}
+        <div className="border-2 border-dashed border-gray-200 rounded-3xl p-8 bg-gray-50">
+          <p className="text-sm font-semibold text-gray-900 mb-3">Quick option: Upload a photo</p>
+          <p className="text-xs text-gray-400 mb-4">We'll analyze your photo to estimate your size, or manually enter it below.</p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={isAnalyzing}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isAnalyzing}
+            className="px-6 py-2.5 rounded-full text-sm font-medium bg-[#6B2737] text-white border-2 border-[#6B2737] hover:bg-[#8B3A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            {isAnalyzing ? 'Analyzing...' : 'Upload Photo'}
+          </button>
+
+          {uploadedImage && (
+            <div className="mt-4 flex gap-4 items-start">
+              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <Image
+                  src={uploadedImage}
+                  alt="Uploaded"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                {analysisError ? (
+                  <p className="text-xs text-red-500">{analysisError}</p>
+                ) : size ? (
+                  <p className="text-xs text-green-600 font-medium">✓ Estimated size: <span className="font-bold">{size}</span></p>
+                ) : isAnalyzing ? (
+                  <p className="text-xs text-gray-500">Analyzing your photo...</p>
+                ) : null}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Step 1 - Gender */}
         <div className="flex gap-5 items-start">
@@ -207,7 +366,7 @@ export default function FitPage() {
           </div>
         </div>
 
-        {/* Step 5 - Product */}
+        {/* Step 5 - Fit */}
         <div className="flex gap-5 items-start">
           <span className="w-9 h-9 rounded-full bg-rose-50 text-[#6B2737] flex items-center justify-center text-sm font-bold shrink-0 border border-[#6B2737]/20" style={{ fontFamily: "var(--font-playfair)" }}>5</span>
           <div className="flex-1">
