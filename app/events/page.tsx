@@ -31,7 +31,7 @@ const BackButton = ({ onClick }: { onClick: () => void }) => (
 )
 
 export default function EventsPage() {
-  const router = useRouter()
+  const router = useRouter()  
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null)
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
@@ -43,10 +43,12 @@ export default function EventsPage() {
       const res = await fetch('/api/pinterest')
       const data = await res.json()
 
-      const images = data.items?.map((pin: any) => ({
-        id: String(pin.id),
-        src: pin.media?.images?.['400x300']?.url ?? pin.media?.images?.['600x']?.url ?? pin.media?.images?.originals?.url,
-      })) ?? []
+      const images = data.items
+        ?.filter((pin: any) => pin.media?.images)
+        .map((pin: any) => ({
+          id: String(pin.id),
+          src: pin.media.images['400x300']?.url ?? pin.media.images['600x']?.url ?? pin.media.images.originals?.url,
+        })) ?? []
 
       const categories = ['daily', 'parties', 'weekend', 'concerts', 'corporate', 'family', 'gym']
       const filled = Object.fromEntries(
