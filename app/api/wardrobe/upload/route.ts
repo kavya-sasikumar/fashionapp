@@ -77,10 +77,7 @@ export async function POST(request: NextRequest) {
     const base64 = Buffer.from(buffer).toString('base64')
     const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
-    // Analyze clothing with Claude
-    const analysis = await analyzeClothingWithClaude(base64, mediaType)
-
-    // Store image as base64 data URL
+    // Store image as base64 data URL (Claude analysis disabled temporarily)
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
     const { data: itemData, error: dbError } = await supabase
@@ -88,9 +85,9 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         image_url: imageDataUrl,
-        item_description: analysis.item_description,
-        color: analysis.color,
-        category: analysis.category,
+        item_description: 'Clothing item',
+        color: 'Unknown',
+        category: 'Uncategorized',
       })
       .select()
       .single()
