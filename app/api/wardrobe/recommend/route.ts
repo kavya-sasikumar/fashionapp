@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 async function generateOutfitRecommendations(items: any[]) {
   const itemsList = items
     .map(
@@ -79,6 +74,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     const { data: items, error } = await supabase
       .from('wardrobe_items')
       .select('*')

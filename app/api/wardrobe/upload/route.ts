@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 async function analyzeClothingWithClaude(base64: string, mediaType: string) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -66,6 +61,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     const formData = await request.formData()
     const file = formData.get('image') as File
 
