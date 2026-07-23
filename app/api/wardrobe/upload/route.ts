@@ -98,10 +98,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(itemData)
   } catch (error) {
-    console.error('Upload error:', error instanceof Error ? error.message : JSON.stringify(error))
+    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+    console.error('Upload error:', errorMsg)
+    console.error('Stack:', error instanceof Error ? error.stack : 'N/A')
     return NextResponse.json({
-      error: error instanceof Error ? error.message : 'Failed to upload item',
-      details: JSON.stringify(error)
+      error: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error?.constructor?.name
     }, { status: 500 })
   }
 }
