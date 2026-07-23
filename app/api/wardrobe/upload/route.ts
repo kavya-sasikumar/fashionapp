@@ -98,7 +98,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(itemData)
   } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Failed to upload item' }, { status: 500 })
+    console.error('Upload error:', error instanceof Error ? error.message : JSON.stringify(error))
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Failed to upload item',
+      details: JSON.stringify(error)
+    }, { status: 500 })
   }
 }
