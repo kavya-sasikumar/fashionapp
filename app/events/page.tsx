@@ -34,9 +34,9 @@ export default function EventsPage() {
   const router = useRouter()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null)
-  const [selectedStyles, setSelectedStyles] = useState<number[]>([])
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [styleGender, setStyleGender] = useState<'women' | 'men'>('women')
-  const [styleImages, setStyleImages] = useState<Record<string, { women: {id:number,src:string}[], men: {id:number,src:string}[] }>>({})
+  const [styleImages, setStyleImages] = useState<Record<string, { women: {id:string,src:string}[], men: {id:string,src:string}[] }>>({})
 
   useEffect(() => {
     async function loadPinterestImages() {
@@ -44,7 +44,7 @@ export default function EventsPage() {
       const data = await res.json()
 
       const images = data.items?.map((pin: any) => ({
-        id: Number(pin.id),
+        id: String(pin.id),
         src: pin.media?.images?.['400x300']?.url ?? pin.media?.images?.['600x']?.url ?? pin.media?.images?.originals?.url,
       })) ?? []
 
@@ -60,9 +60,9 @@ export default function EventsPage() {
   }, [])
 
   const eventLabel = events.find(e => e.id === selectedEvent)?.label ?? ''
-  const currentStyleImages: {id:number, src:string}[] = selectedEvent ? (styleImages[selectedEvent]?.[styleGender] ?? []) : []
+  const currentStyleImages: {id:string, src:string}[] = selectedEvent ? (styleImages[selectedEvent]?.[styleGender] ?? []) : []
 
-  function toggleStyle(id: number) {
+  function toggleStyle(id: string) {
     setSelectedStyles(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : prev.length < 3 ? [...prev, id] : prev
     )
