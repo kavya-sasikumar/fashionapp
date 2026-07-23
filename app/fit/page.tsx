@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
 
 const womenProducts = ['Dresses & Gowns', 'Tops & Blouses', 'Skirts', 'Jeans & Trousers', 'Jackets & Coats', 'Activewear & Leggings', 'Swimwear', 'Lingerie & Loungewear']
 const menProducts   = ['T-Shirts & Polos', 'Dress Shirts', 'Jeans & Chinos', 'Suits & Blazers', 'Shorts', 'Hoodies & Sweatshirts', 'Activewear', 'Outerwear & Coats']
@@ -232,12 +231,11 @@ export default function FitPage() {
 
           {uploadedImage && (
             <div className="mt-4 flex gap-4 items-start">
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                <Image
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <img
                   src={uploadedImage}
                   alt="Uploaded"
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1">
