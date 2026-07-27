@@ -51,7 +51,16 @@ Return ONLY the JSON array, nothing else.`,
     }),
   })
 
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`)
+  }
+
   const data = await response.json()
+
+  if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
+    throw new Error('No content in API response')
+  }
+
   const content = data.content[0]
 
   if (content.type !== 'text') {
