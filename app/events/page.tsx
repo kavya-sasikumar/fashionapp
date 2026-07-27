@@ -39,8 +39,11 @@ export default function EventsPage() {
   const [styleImages, setStyleImages] = useState<Record<string, { women: {id:string,src:string}[], men: {id:string,src:string}[] }>>({})
 
   useEffect(() => {
+    if (!selectedEvent) return
+    const event = selectedEvent
+
     async function loadPinterestImages() {
-      const res = await fetch('/api/pinterest')
+      const res = await fetch(`/api/pinterest?event=${selectedEvent}&gender=${styleGender}`)
       const data = await res.json()
 
       const images = data.items
@@ -50,16 +53,14 @@ export default function EventsPage() {
           src: pin.media.images['400x300']?.url ?? pin.media.images['600x']?.url ?? pin.media.images.originals?.url,
         })) ?? []
 
-      const categories = ['daily', 'parties', 'weekend', 'concerts', 'corporate', 'family', 'gym']
-      const filled = Object.fromEntries(
-        categories.map((cat) => [cat, { women: images, men: images }])
-      )
-
-      setStyleImages(filled)
+      setStyleImages(prev => ({
+        ...prev,
+        [event]: { ...prev[event], [styleGender]: images },
+      }))
     }
 
-    loadPinterestImages()
-  }, [])
+  loadPinterestImages()
+}, [selectedEvent, styleGender])
 
   const eventLabel = events.find(e => e.id === selectedEvent)?.label ?? ''
   const currentStyleImages: {id:string, src:string}[] = selectedEvent ? (styleImages[selectedEvent]?.[styleGender] ?? []) : []
