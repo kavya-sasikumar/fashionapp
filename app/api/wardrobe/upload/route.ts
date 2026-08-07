@@ -74,16 +74,18 @@ export async function POST(request: NextRequest) {
 
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
+      'Content-Type': 'application/json',
+    }
 
     const res = await fetch(`${supabaseUrl}/rest/v1/wardrobe_items`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         user_id: userId,
         image_url: imageDataUrl,
