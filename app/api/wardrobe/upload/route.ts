@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL)
     const sql = postgres(process.env.DATABASE_URL!)
 
     const formData = await request.formData()
@@ -25,20 +26,23 @@ export async function POST(request: NextRequest) {
 
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
+    console.log('Inserting into database...')
     const result = await sql`
       INSERT INTO wardrobe_items (user_id, image_url, item_description, color, category)
       VALUES (${userId}, ${imageDataUrl}, 'Clothing item', 'Unknown', 'Uncategorized')
       RETURNING *
     `
 
+    console.log('Insert successful:', result.length)
     await sql.end()
 
     return NextResponse.json(result[0])
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
-    console.error('Upload error:', errorMsg)
+    const stack = error instanceof Error ? error.stack : ''
+    console.error('Upload error:', errorMsg, stack)
     return NextResponse.json(
-      { error: errorMsg },
+      { error: errorMsg, details: stack },
       { status: 500 }
     )
   }
