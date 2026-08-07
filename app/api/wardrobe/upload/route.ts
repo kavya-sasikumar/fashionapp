@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     const formData = await request.formData()
     const file = formData.get('image') as File
 
@@ -74,34 +79,23 @@ export async function POST(request: NextRequest) {
 
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${supabaseKey}`,
-      'apikey': supabaseKey,
-      'Content-Type': 'application/json',
-    }
-
-    const res = await fetch(`${supabaseUrl}/rest/v1/wardrobe_items`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
+    const { data: itemData, error: dbError } = await supabase
+      .from('wardrobe_items')
+      .insert({
         user_id: userId,
         image_url: imageDataUrl,
         item_description: 'Clothing item',
         color: 'Unknown',
         category: 'Uncategorized',
-      }),
-    })
+      })
+      .select()
+      .single()
 
-    if (!res.ok) {
-      const errorData = await res.text()
-      throw new Error(`Supabase API error: ${res.status} - ${errorData}`)
+    if (dbError) {
+      throw dbError
     }
 
-    const data = await res.json()
-    return NextResponse.json(data[0])
+    return NextResponse.json(itemData)
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
     console.error('Upload error:', errorMsg)
