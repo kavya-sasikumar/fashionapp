@@ -54,32 +54,41 @@ Be concise.`,
 }
 
 export async function POST(request: NextRequest) {
+  console.log('=== Upload endpoint called ===')
+
   const { userId } = await auth()
+  console.log('Auth userId:', userId)
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
+    console.log('Creating Supabase client...')
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
+    console.log('Supabase client created')
 
+    console.log('Reading form data...')
     const formData = await request.formData()
     const file = formData.get('image') as File
+    console.log('File:', file?.name, file?.size)
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    console.log('Converting to base64...')
     const buffer = await file.arrayBuffer()
     const base64 = Buffer.from(buffer).toString('base64')
     const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+    console.log('Base64 length:', base64.length)
 
-    // Store image as base64 data URL (Claude analysis disabled temporarily)
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
+    console.log('Inserting into database...')
     const { data: itemData, error: dbError } = await supabase
       .from('wardrobe_items')
       .insert({
@@ -92,10 +101,13 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
+    console.log('Database response:', { itemData, dbError })
+
     if (dbError) {
       throw dbError
     }
 
+    console.log('Upload successful')
     return NextResponse.json(itemData)
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)

@@ -68,15 +68,20 @@ export default function WardrobePage() {
         body: formData,
       })
 
+      const data = await res.json()
+
       if (res.ok) {
-        const newItem = await res.json()
-        setItems([newItem, ...items])
+        setItems([data, ...items])
         setShowUploadModal(false)
         setSelectedFile(null)
         setPreviewUrl(null)
+      } else {
+        console.error('Upload error:', data)
+        alert(`Upload failed: ${data.error}`)
       }
     } catch (error) {
       console.error('Upload failed:', error)
+      alert(`Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setUploading(false)
     }
