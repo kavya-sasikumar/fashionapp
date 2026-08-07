@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import postgres from 'postgres'
 
 export async function DELETE(
   request: NextRequest,
@@ -14,20 +14,14 @@ export async function DELETE(
   }
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const sql = postgres(process.env.DATABASE_URL!)
 
-    const { error: deleteError } = await supabase
-      .from('wardrobe_items')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
+    await sql`
+      DELETE FROM wardrobe_items
+      WHERE id = ${id} AND user_id = ${userId}
+    `
 
-    if (deleteError) {
-      throw deleteError
-    }
+    await sql.end()
 
     return NextResponse.json({ success: true })
   } catch (error) {

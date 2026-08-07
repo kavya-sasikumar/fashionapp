@@ -1,57 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
-
-async function analyzeClothingWithClaude(base64: string, mediaType: string) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-opus-4-8',
-      max_tokens: 256,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: base64,
-              },
-            },
-            {
-              type: 'text',
-              text: `Analyze this clothing item and return ONLY a JSON object with this exact format:
-{"item_description": "brief description", "color": "main color", "category": "category like Tops, Bottoms, Dresses, Jackets, etc"}
-
-Be concise.`,
-            },
-          ],
-        },
-      ],
-    }),
-  })
-
-  const data = await response.json()
-  const content = data.content[0]
-
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type')
-  }
-
-  const jsonMatch = content.text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    throw new Error('Could not parse clothing analysis')
-  }
-
-  return JSON.parse(jsonMatch[0])
-}
+import postgres from 'postgres'
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth()
@@ -61,10 +10,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const sql = postgres(process.env.DATABASE_URL!)
 
     const formData = await request.formData()
     const file = formData.get('image') as File
@@ -79,23 +25,15 @@ export async function POST(request: NextRequest) {
 
     const imageDataUrl = `data:${mediaType};base64,${base64}`
 
-    const { data: itemData, error: dbError } = await supabase
-      .from('wardrobe_items')
-      .insert({
-        user_id: userId,
-        image_url: imageDataUrl,
-        item_description: 'Clothing item',
-        color: 'Unknown',
-        category: 'Uncategorized',
-      })
-      .select()
-      .single()
+    const result = await sql`
+      INSERT INTO wardrobe_items (user_id, image_url, item_description, color, category)
+      VALUES (${userId}, ${imageDataUrl}, 'Clothing item', 'Unknown', 'Uncategorized')
+      RETURNING *
+    `
 
-    if (dbError) {
-      throw dbError
-    }
+    await sql.end()
 
-    return NextResponse.json(itemData)
+    return NextResponse.json(result[0])
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
     console.error('Upload error:', errorMsg)

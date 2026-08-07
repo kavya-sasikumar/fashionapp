@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import postgres from 'postgres'
 
 export async function GET(request: NextRequest) {
   const { userId } = await auth()
@@ -10,22 +10,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const sql = postgres(process.env.DATABASE_URL!)
 
-    const { data, error } = await supabase
-      .from('wardrobe_items')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+    const items = await sql`
+      SELECT * FROM wardrobe_items
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `
 
-    if (error) {
-      throw error
-    }
+    await sql.end()
 
-    return NextResponse.json(data)
+    return NextResponse.json(items)
   } catch (error) {
     console.error('Fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 })
