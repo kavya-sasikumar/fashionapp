@@ -79,7 +79,7 @@ export default function EventsPage() {
 
         <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
           {selectedStyles.map(id => {
-            const allImages = Object.values(styleImages).flatMap(s => [...s.women, ...s.men])
+            const allImages = Object.values(styleImages).flatMap(s => [...(s.women ?? []), ...(s.men ?? [])])
             const img = allImages.find(s => s.id === id)
             if (!img) return null
             return (
