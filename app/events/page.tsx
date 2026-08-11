@@ -37,6 +37,7 @@ export default function EventsPage() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [styleGender, setStyleGender] = useState<'women' | 'men'>('women')
   const [styleImages, setStyleImages] = useState<Record<string, { women: {id:string,src:string}[], men: {id:string,src:string}[] }>>({})
+  const [styleAnalysis, setStyleAnalysis] = useState<string>('')
 
   useEffect(() => {
     if (!selectedEvent) return
@@ -61,6 +62,27 @@ export default function EventsPage() {
 
   loadPinterestImages()
 }, [selectedEvent, styleGender])
+
+  useEffect(() => {
+    if (step !== 3 || selectedStyles.length === 0) return
+
+    async function analyzeStyles() {
+      const allImages = Object.values(styleImages).flatMap(s => [...(s.women ?? []), ...(s.men ?? [])])
+      const selectedUrls = selectedStyles
+        .map(id => allImages.find(img => img.id === id)?.src)
+        .filter(Boolean)
+
+      const res = await fetch('/api/analyze-style', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrls: selectedUrls }),
+      })
+      const data = await res.json()
+      setStyleAnalysis(data.text)
+    }
+
+    analyzeStyles()
+    }, [step])
 
   const eventLabel = events.find(e => e.id === selectedEvent)?.label ?? ''
   const currentStyleImages: {id:string, src:string}[] = selectedEvent ? (styleImages[selectedEvent]?.[styleGender] ?? []) : []
@@ -90,9 +112,7 @@ export default function EventsPage() {
         </div>
 
         <p className="text-sm text-gray-600 mb-8 leading-relaxed">
-          Your style is <strong className="text-gray-900">romantic and feminine</strong>, with a love for timeless elegance and intricate details.
-          You appreciate <strong className="text-gray-900">standout pieces</strong> that blend confidence with graceful charm.
-          Your selections radiate <strong className="text-gray-900">polished and glamorous</strong> vibes.
+          {styleAnalysis || 'Analyzing your style...'}
         </p>
 
         <h3 className="text-lg font-semibold text-gray-900 mb-4" style={playfair}>Products you may like</h3>
@@ -163,6 +183,8 @@ export default function EventsPage() {
       </div>
     )
   }
+
+  
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
