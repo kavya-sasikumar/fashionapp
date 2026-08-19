@@ -39,12 +39,24 @@ export default function EventsPage() {
   const [styleImages, setStyleImages] = useState<Record<string, { women: {id:string,src:string}[], men: {id:string,src:string}[] }>>({})
   const [styleAnalysis, setStyleAnalysis] = useState<string>('')
 
+    const boardIds: Record<string, { women: string, men: string }> = {
+    daily:      { women: '1103100571170531486', men: '1103100571170577301' },
+    parties:    { women: '1103100571170577309', men: '1103100571170577305' },
+    weekend:    { women: '1103100571170577315', men: '1103100571170577313' },
+    concerts:   { women: '1103100571170577337', men: '1103100571170577325' },
+    corporate:  { women: '1103100571170577348', men: '1103100571170577346' },
+    family:     { women: '1103100571170577354', men: '1103100571170577353' },
+    gym:        { women: '1103100571170577358', men: '1103100571170577357' },
+  }
+
   useEffect(() => {
     if (!selectedEvent) return
     const event = selectedEvent
+    const boardId = boardIds[event]?.[styleGender]
+    if (!boardId) return
 
     async function loadPinterestImages() {
-      const res = await fetch(`/api/pinterest?event=${selectedEvent}&gender=${styleGender}`)
+      const res = await fetch(`/api/pinterest?boardId=${boardId}`)
       const data = await res.json()
 
       const images = data.items
@@ -60,8 +72,8 @@ export default function EventsPage() {
       }))
     }
 
-  loadPinterestImages()
-}, [selectedEvent, styleGender])
+    loadPinterestImages()
+  }, [selectedEvent, styleGender])
 
   useEffect(() => {
     if (step !== 3 || selectedStyles.length === 0) return
