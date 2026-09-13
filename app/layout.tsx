@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "FashionApp",
+  title: "Find Your Fit!",
   description: "Your personal AI style assistant",
 };
 
@@ -32,7 +32,7 @@ export default function RootLayout({
         <body className="min-h-full flex flex-col bg-white" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>
           <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
             <Link href="/" className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair)" }}>
-              FashionApp
+              Find Your Fit!
             </Link>
             <nav className="flex items-center gap-6 text-sm font-medium text-gray-500">
               <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
@@ -49,7 +49,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
 
           <footer className="bg-white border-t border-gray-100 px-8 py-6 text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} FashionApp &mdash; Powered by AI
+            &copy; {new Date().getFullYear()} Find Your Fit &mdash; Powered by AI
             <span className="mx-2">&middot;</span>
             <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
           </footer>
