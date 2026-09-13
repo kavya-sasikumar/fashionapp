@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server'
 
+async function urlToBase64(url: string) {
+  const res = await fetch(url)
+  const buffer = await res.arrayBuffer()
+  const base64 = Buffer.from(buffer).toString('base64')
+  const mediaType = res.headers.get('content-type') || 'image/jpeg'
+  return { base64, mediaType }
+}
+
 export async function POST(req: Request) {
   try {
     const { imageUrls } = await req.json()
@@ -7,6 +15,16 @@ export async function POST(req: Request) {
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
       return NextResponse.json({ error: 'No image URLs provided' }, { status: 400 })
     }
+
+    const imageBlocks = await Promise.all(
+      imageUrls.map(async (url: string) => {
+        const { base64, mediaType } = await urlToBase64(url)
+        return {
+          type: 'image',
+          source: { type: 'base64', media_type: mediaType, data: base64 },
+        }
+      })
+    )
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -23,14 +41,11 @@ export async function POST(req: Request) {
           'Analyze the outfit style images the user has selected and describe their personal aesthetic in 2-3 sentences, ' +
           '-Write directly in second person (e.g. romantic, minimalist, edgy) and what kind of pieces they gravitate toward.' +
           '-Use bolded text on important words, formatting text as needed.',
-          messages: [
+        messages: [
           {
             role: 'user',
             content: [
-              ...imageUrls.map((url: string) => ({
-                type: 'image',
-                source: { type: 'url', url },
-              })),
+              ...imageBlocks,
               { type: 'text', text: 'Here are the 3 outfit styles I selected:' },
             ],
           },
