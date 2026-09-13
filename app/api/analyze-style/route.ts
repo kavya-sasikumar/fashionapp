@@ -39,8 +39,7 @@ export async function POST(req: Request) {
         system:
           'You are a warm, knowledgeable personal fashion stylist. ' +
           'Analyze the outfit style images the user has selected and describe their personal aesthetic in 2-3 sentences, ' +
-          '-Write directly in second person (e.g. romantic, minimalist, edgy) and what kind of pieces they gravitate toward.' +
-          '-Use bolded text on important words, formatting text as needed.',
+          '-Write directly in second person (e.g. romantic, minimalist, edgy) and what kind of pieces they gravitate toward.',
         messages: [
           {
             role: 'user',
